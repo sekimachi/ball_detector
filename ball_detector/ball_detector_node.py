@@ -8,6 +8,9 @@ import pyrealsense2 as rs
 import numpy as np
 import cv2
 from imrc_messages.msg import BallInfo
+from imrc_messages.msg import LedControl
+
+
 # ===============================
 # 調整用パラメータ（ロボット・環境依存なので適宜調整をするお）
 # ===============================
@@ -60,6 +63,7 @@ class BallDetector(Node):
         # ===== Publisher ====
         self.status_pub = self.create_publisher(Bool,'detect_ball_status',10)
         self.ball_pub = self.create_publisher(BallInfo,'ball_info',10)
+        self.led_pub = self.create_publisher(LedControl,'led_control',10)
 
 
         # ===== Subscriber =====
@@ -74,16 +78,43 @@ class BallDetector(Node):
     # 色を受け取るコールバック
     # ===============================
     def color_cb(self, msg):
+        
         self.target_color = msg.data
+        msg_led = LedControl()
+
         # ====受け取った色に応じてモデルを切り替える====
         if self.target_color == "赤":
             self.current_model = self.model_red
-
+            
+            # LED を赤く点灯させる
+            msg_led.led_brightness = 1.0    #明るさ　0.0～1.0
+            msg_led.led_index = 5           #私に使うことが許されるのは5番LED
+            msg_led.led_color = "RED"       #色
+            msg_led.led_mode = "apply"      #gblinkはじんわりブリンク、applyは即座に点灯、brinnkは点滅
+            msg_led.blink_duration = 1000.0 #周期　1000で1秒
+            self.led_pub.publish(msg_led)
+            
         elif self.target_color == "青":
             self.current_model = self.model_blue
 
+            # LED を青く点灯させる
+            msg_led.led_brightness = 1.0
+            msg_led.led_index = 5
+            msg_led.led_color = "BLUE"
+            msg_led.led_mode = "apply"
+            msg_led.blink_duration = 1000.0
+            self.led_pub.publish(msg_led)
+
         elif self.target_color == "黄":
             self.current_model = self.model_yellow
+
+            # LED を緑に点灯させる
+            msg_led.led_brightness = 1.0
+            msg_led.led_index = 5
+            msg_led.led_color = "GREEN"
+            msg_led.led_mode = "apply"
+            msg_led.blink_duration = 1000.0
+            self.led_pub.publish(msg_led)
 
         else:
             self.current_model = None
@@ -136,7 +167,7 @@ class BallDetector(Node):
                 })
 
         # ===============================
-        # ★ ここから描画処理 ★
+        # GUI 描画
         # ===============================
         draw = color.copy()
 
