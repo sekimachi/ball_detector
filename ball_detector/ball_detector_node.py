@@ -90,7 +90,7 @@ class BallDetector(Node):
             msg_led.led_brightness = 1.0    #明るさ　0.0～1.0
             msg_led.led_index = 5           #私に使うことが許されるのは5番LED
             msg_led.led_color = "RED"       #色
-            msg_led.led_mode = "apply"      #gblinkはじんわりブリンク、applyは即座に点灯、brinnkは点滅
+            msg_led.led_mode = "apply"      #gblinkはじんわりブリンク、applyはに点灯、brinnkは点滅
             msg_led.blink_duration = 1000.0 #周期　1000で1秒
             self.led_pub.publish(msg_led)
             
