@@ -63,7 +63,7 @@ class BallDetector(Node):
         # ===== Publisher ====
         self.status_pub = self.create_publisher(Bool,'detect_ball_status',10)
         self.ball_pub = self.create_publisher(BallInfo,'ball_info',10)
-        self.led_pub = self.create_publisher(LedControl,'led_control',10)
+        self.led_pub = self.create_publisher(LedControl,'led_cmd',10)
 
 
         # ===== Subscriber =====
