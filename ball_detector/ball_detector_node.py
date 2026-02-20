@@ -108,10 +108,10 @@ class BallDetector(Node):
         elif self.target_color == "黄":
             self.current_model = self.model_yellow
 
-            # LED を緑に点灯させる
+            # LED を黄色に点灯させる
             msg_led.led_brightness = 1.0
             msg_led.led_index = 5
-            msg_led.led_color = "GREEN"
+            msg_led.led_color = "YELLOW"
             msg_led.led_mode = "apply"
             msg_led.blink_duration = 1000.0
             self.led_pub.publish(msg_led)
