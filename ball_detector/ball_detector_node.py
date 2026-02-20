@@ -74,47 +74,49 @@ class BallDetector(Node):
         self.create_timer(1.0 / FPS, self.timer_cb)
         # =================================
 
+        self.msg_led = LedControl()
+
     # ===============================
     # 色を受け取るコールバック
     # ===============================
     def color_cb(self, msg):
         
         self.target_color = msg.data
-        msg_led = LedControl()
+
 
         # ====受け取った色に応じてモデルを切り替える====
         if self.target_color == "赤":
             self.current_model = self.model_red
             
             # LED を赤く点灯させる
-            msg_led.led_brightness = 1.0    #明るさ　0.0～1.0
-            msg_led.led_index = 5           #私に使うことが許されるのは5番LED
-            msg_led.led_color = "RED"       #色
-            msg_led.led_mode = "apply"      #gblinkはじんわりブリンク、applyはに点灯、brinnkは点滅
-            msg_led.blink_duration = 1000.0 #周期　1000で1秒
-            self.led_pub.publish(msg_led)
+            self.msg_led.led_brightness = 1.0    #明るさ　0.0～1.0
+            self.msg_led.led_index = 5           #私に使うことが許されるのは5番LED
+            self.msg_led.led_color = "RED"       #色
+            self.msg_led.led_mode = "apply"      #gblinkはじんわりブリンク、applyはに点灯、brinnkは点滅
+            self.msg_led.blink_duration = 1000.0 #周期　1000で1秒
+            self.led_pub.publish(self.msg_led)
             
         elif self.target_color == "青":
             self.current_model = self.model_blue
 
             # LED を青く点灯させる
-            msg_led.led_brightness = 1.0
-            msg_led.led_index = 5
-            msg_led.led_color = "BLUE"
-            msg_led.led_mode = "apply"
-            msg_led.blink_duration = 1000.0
-            self.led_pub.publish(msg_led)
+            self.msg_led.led_brightness = 1.0
+            self.msg_led.led_index = 5
+            self.msg_led.led_color = "BLUE"
+            self.msg_led.led_mode = "apply"
+            self.msg_led.blink_duration = 1000.0
+            self.led_pub.publish(self.msg_led)
 
         elif self.target_color == "黄":
             self.current_model = self.model_yellow
 
             # LED を黄色に点灯させる
-            msg_led.led_brightness = 1.0
-            msg_led.led_index = 5
-            msg_led.led_color = "YELLOW"
-            msg_led.led_mode = "apply"
-            msg_led.blink_duration = 1000.0
-            self.led_pub.publish(msg_led)
+            self.msg_led.led_brightness = 1.0
+            self.msg_led.led_index = 5
+            self.msg_led.led_color = "YELLOW"
+            self.msg_led.led_mode = "apply"
+            self.msg_led.blink_duration = 1000.0
+            self.led_pub.publish(self.msg_led)
 
         else:
             self.current_model = None
