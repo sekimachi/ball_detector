@@ -16,14 +16,28 @@ from imrc_messages.msg import LedControl
 # ===============================
 IMG_W, IMG_H = 640, 480
 
-# 制御ループ周期　これは変えないほうがいいかも
+# 制御ループ周期　これは変えないほうがいいかも　
 FPS = 15
+
+# 画面中心のオフセット（単位はピクセル）
+center_paramX = 30
+center_paramY = -46
+
+#operaterと合致するようにしないと正しくGUが使えない
+#14がマックス
+DX_TH = 12
+#28がマックス
+DY_TH = 26
+
+DEPTH_MIN = 41.0
+DEPTH_MAX = 46.0
+
 
 # YOLO の信頼度しきい値
 CONF_TH = 0.35
 
-# 画面上で「目標のボールの中心」とみなす座標を指定
-CENTER_X, CENTER_Y = (IMG_W // 2) + 46, (IMG_H // 2) - 20
+# 画面上で「目標のボールの中心」とみなす座標を指定   
+CENTER_X, CENTER_Y = (IMG_W // 2) + center_paramX, (IMG_H // 2) + center_paramY
 
 # 検出ロスト許容フレーム数
 MAX_MISS = 5
@@ -233,13 +247,45 @@ class BallDetector(Node):
                 2
             )
 
+            # ===== しきい値判定 =====
+            dx_ok = abs(dx) <= DX_TH
+            dy_ok = abs(dy) <= DY_TH
+            depth_ok = DEPTH_MIN <= depth_cm <= DEPTH_MAX
+
+            dx_color = (0, 255, 0) if dx_ok else (0, 0, 255)
+            dy_color = (0, 255, 0) if dy_ok else (0, 0, 255)
+            depth_color = (0, 255, 0) if depth_ok else (0, 0, 255)
+
+            # ===== 個別表示 =====
+            y_text = y1 - 10
+
             cv2.putText(
                 draw,
-                f"dx:{dx} dy:{dy} depth:{depth_cm:.1f}cm",
-                (x1, y1 - 10),
+                f"dx:{dx}",
+                (x1, y_text),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.5,
-                (0, 255, 0),
+                dx_color,
+                2
+            )
+
+            cv2.putText(
+                draw,
+                f"dy:{dy}",
+                (x1 + 80, y_text),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                dy_color,
+                2
+            )
+
+            cv2.putText(
+                draw,
+                f"depth:{depth_cm:.1f}cm",
+                (x1 + 160, y_text),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                depth_color,
                 2
             )
 
