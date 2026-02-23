@@ -20,8 +20,8 @@ IMG_W, IMG_H = 640, 480
 FPS = 15
 
 # 画面中心のオフセット（単位はピクセル）
-center_paramX = 30
-center_paramY = -46
+center_paramX = 23
+center_paramY = -62
 
 #operaterと合致するようにしないと正しくGUが使えない
 #14がマックス
