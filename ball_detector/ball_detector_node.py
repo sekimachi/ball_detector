@@ -29,8 +29,8 @@ DX_TH = 12
 #28がマックス
 DY_TH = 26
 
-DEPTH_MIN = 41.0
-DEPTH_MAX = 46.0
+DEPTH_MIN = 43.0
+DEPTH_MAX = 49.0
 
 
 # YOLO の信頼度しきい値
