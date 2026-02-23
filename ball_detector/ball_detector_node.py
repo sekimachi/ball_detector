@@ -39,6 +39,7 @@ CONF_TH = 0.35
 # 画面上で「目標のボールの中心」とみなす座標を指定   
 CENTER_X, CENTER_Y = (IMG_W // 2) + center_paramX, (IMG_H // 2) + center_paramY
 
+
 # 検出ロスト許容フレーム数
 MAX_MISS = 5
 
@@ -78,7 +79,7 @@ class BallDetector(Node):
         self.status_pub = self.create_publisher(Bool,'detect_ball_status',10)
         self.ball_pub = self.create_publisher(BallInfo,'ball_info',10)
         self.led_pub = self.create_publisher(LedControl,'led_cmd',10)
-
+        self.depth_pub = self.create_publisher(String,'depth_status',10)
 
         # ===== Subscriber =====
         self.create_subscription(String,'detect_ball_color',self.color_cb,10)
@@ -162,6 +163,20 @@ class BallDetector(Node):
         color = np.asanyarray(cf.get_data())
         depth = np.asanyarray(df.get_data())
 
+        # ===============================
+        # 画面中心点にある物体までの距離 を ぱぶりっしゅ
+        # ===============================
+        center_depth_raw = depth[(IMG_W // 2), (IMG_H // 2)]
+        #　カメラで数値を取得できたとき
+        if center_depth_raw > 0:
+            center_depth_cm = center_depth_raw * self.depth_scale * 100.0
+            msg = String()
+            msg.data = f"{center_depth_cm:.1f}"
+        else:
+            msg = String()
+            msg.data = "測定不能"
+        self.depth_pub.publish(msg)
+
         # ---- YOLO 検出 ----
         dets = []
         for r in self.current_model(color, conf=CONF_TH, verbose=False):
@@ -198,7 +213,7 @@ class BallDetector(Node):
         )
         draw = color.copy()
 
-        # ===== 画面中心（目標点） =====
+        # ===== 目標点 =====
         cv2.drawMarker(
             draw,
             (CENTER_X, CENTER_Y),
