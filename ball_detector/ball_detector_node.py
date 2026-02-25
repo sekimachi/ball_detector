@@ -21,17 +21,17 @@ FPS = 15
 
 # 画面中心のオフセット（単位はピクセル）
 center_paramX = 23
-center_paramY = -62
+center_paramY = -68
 
 #この２つはoperaterと合致するようにしないと正しくGUIが使えない
 #14がマックス
-DX_TH = 12
-#28がマックス
-DY_TH = 26
+DX_TH = 14
+#36がマックス
+DY_TH = 35
 
 #目標とするボールまでの距離の範囲（単位はcm）
-DEPTH_MIN = 41.0
-DEPTH_MAX = 49.0
+DEPTH_MIN = 44.0
+DEPTH_MAX = 50.8
 
 
 # YOLO の信頼度しきい値
@@ -185,6 +185,7 @@ class BallDetector(Node):
                 continue
             for b in r.boxes:
                 x1, y1, x2, y2 = map(int, b.xyxy[0])
+                conf = float(b.conf[0])   
                 cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
 
                 d = depth[cy, cx]
@@ -195,7 +196,8 @@ class BallDetector(Node):
                     "bbox": (x1, y1, x2, y2),
                     "dx": cx - CENTER_X,
                     "dy": cy - CENTER_Y,
-                    "depth": d * self.depth_scale * 100.0
+                    "depth": d * self.depth_scale * 100.0,
+                    "conf": conf
                 })
 
         # ===============================
@@ -232,7 +234,7 @@ class BallDetector(Node):
             dx = self.last["dx"]
             dy = self.last["dy"]
             depth_cm = self.last["depth"]
-
+            confidence = self.last["conf"]
             # ===== ボール中心座標 =====
             cx = (x1 + x2) // 2
             cy = (y1 + y2) // 2
@@ -253,15 +255,17 @@ class BallDetector(Node):
             )
 
             # 情報テキスト
-            cv2.putText(
-                draw,
-                f"cx:{cx} cy:{cy}",
-                (x1, y2 + 20),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.5,
-                (0, 0, 255),
-                2
-            )
+            # cv2.putText(
+            #     draw,
+            #     f"cx:{cx} cy:{cy}",
+            #     (x1, y2 + 20),
+            #     cv2.FONT_HERSHEY_SIMPLEX,
+            #     0.5,
+            #     (0, 0, 255),
+            #     2
+            # )
+
+
 
             # ===== しきい値判定 =====
             dx_ok = abs(dx) <= DX_TH
@@ -302,6 +306,16 @@ class BallDetector(Node):
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.5,
                 depth_color,
+                2
+            )
+
+            cv2.putText(
+                draw,
+                f"conf:{confidence:.2f}",
+                (x1 + 20, y2+20),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (255, 255, 0),
                 2
             )
 
