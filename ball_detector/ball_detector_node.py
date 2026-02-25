@@ -23,12 +23,13 @@ FPS = 15
 center_paramX = 23
 center_paramY = -62
 
-#operaterと合致するようにしないと正しくGUが使えない
+#この２つはoperaterと合致するようにしないと正しくGUIが使えない
 #14がマックス
 DX_TH = 12
 #28がマックス
 DY_TH = 26
 
+#目標とするボールまでの距離の範囲（単位はcm）
 DEPTH_MIN = 41.0
 DEPTH_MAX = 49.0
 
