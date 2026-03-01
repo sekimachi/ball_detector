@@ -25,9 +25,9 @@ center_paramY = -63
 
 #この２つはoperaterと合致するようにしないと正しくGUIが使えない
 #14がマックス
-DX_TH = 12
+DX_TH = 11
 #36がマックス
-DY_TH = 25
+DY_TH = 21
 
 #目標とするボールまでの距離の範囲（単位はcm）
 DEPTH_MIN = 41.0
