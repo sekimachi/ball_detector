@@ -35,7 +35,7 @@ DEPTH_MAX = 51.0
 
 
 # YOLO の信頼度しきい値
-CONF_TH = 0.35
+CONF_TH = 0.15
 
 # 画面上で「目標のボールの中心」とみなす座標を指定   
 CENTER_X, CENTER_Y = (IMG_W // 2) + center_paramX, (IMG_H // 2) + center_paramY
