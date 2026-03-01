@@ -35,7 +35,7 @@ DEPTH_MAX = 51.0
 
 
 # YOLO の信頼度しきい値
-CONF_TH = 0.15
+CONF_TH = 0.35
 
 # 画面上で「目標のボールの中心」とみなす座標を指定   
 CENTER_X, CENTER_Y = (IMG_W // 2) + center_paramX, (IMG_H // 2) + center_paramY
@@ -54,7 +54,7 @@ class BallDetector(Node):
         
         self.last = None
         self.miss = 0
-
+        self.target_locked = None
         self.current_model = None
         self.target_color = None
  
@@ -226,8 +226,34 @@ class BallDetector(Node):
             2
         )
 
+        # ===== 全検出物体（水色）=====
+        for det in dets:
+            x1, y1, x2, y2 = det["bbox"]
+
+            cv2.rectangle(
+                draw,
+                (x1, y1),
+                (x2, y2),
+                (255, 255, 0),   # 水色
+                2
+            )
+
         if dets:
-            self.last = min(dets, key=lambda x: x["depth"])
+            if self.target_locked is None:
+                # 初回だけ一番近いボール
+                self.target_locked = min(dets, key=lambda x: x["depth"])
+
+            else:
+                # 前回ターゲットに一番近いもの
+                def tracking_cost(det):
+                    dx_diff = det["dx"] - self.target_locked["dx"]
+                    dy_diff = det["dy"] - self.target_locked["dy"]
+                    dist2 = dx_diff**2 + dy_diff**2
+                    return dist2
+
+                self.target_locked = min(dets, key=tracking_cost)
+
+            self.last = self.target_locked
             self.miss = 0
 
             x1, y1, x2, y2 = self.last["bbox"]
@@ -324,6 +350,7 @@ class BallDetector(Node):
             self.miss += 1
             if self.miss > MAX_MISS:
                 self.last = None
+                self.target_locked = None  
                 self.publish_ball_info()
 
         # ウィンドウ表示
