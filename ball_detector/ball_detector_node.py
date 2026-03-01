@@ -25,7 +25,7 @@ center_paramY = -50
 
 #この２つはoperaterと合致するようにしないと正しくGUIが使えない
 #14がマックス
-DX_TH = 10
+DX_TH = 8
 #36がマックス
 DY_TH = 20
 
