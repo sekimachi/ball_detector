@@ -42,7 +42,7 @@ CENTER_X, CENTER_Y = (IMG_W // 2) + center_paramX, (IMG_H // 2) + center_paramY
 
 
 # 検出ロスト許容フレーム数
-MAX_MISS = 5
+MAX_MISS = 10
 
 CV2_WINDOW_X = 640
 CV2_WINDOW_Y = 640
@@ -58,6 +58,10 @@ class BallDetector(Node):
         self.current_model = None
         self.target_color = None
  
+        self.target_locked = None
+        self.target_lost_count = 0
+        self.MAX_LOST = 10
+        
         cv2.namedWindow("ball_detector", cv2.WINDOW_NORMAL)
         cv2.resizeWindow("ball_detector", CV2_WINDOW_X, CV2_WINDOW_Y)  
 
