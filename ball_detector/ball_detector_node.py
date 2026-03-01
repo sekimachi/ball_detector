@@ -21,17 +21,17 @@ FPS = 15
 
 # 画面中心のオフセット（単位はピクセル）
 center_paramX = 23
-center_paramY = -63
+center_paramY = -50
 
 #この２つはoperaterと合致するようにしないと正しくGUIが使えない
 #14がマックス
-DX_TH = 11
+DX_TH = 10
 #36がマックス
 DY_TH = 20
 
 #目標とするボールまでの距離の範囲（単位はcm）
 DEPTH_MIN = 41.0
-DEPTH_MAX = 50.0
+DEPTH_MAX = 51.0
 
 
 # YOLO の信頼度しきい値
