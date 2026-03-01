@@ -27,7 +27,7 @@ center_paramY = -63
 #14がマックス
 DX_TH = 11
 #36がマックス
-DY_TH = 21
+DY_TH = 20
 
 #目標とするボールまでの距離の範囲（単位はcm）
 DEPTH_MIN = 41.0
