@@ -57,7 +57,8 @@ class BallDetector(Node):
         self.target_locked = None
         self.current_model = None
         self.target_color = None
- 
+
+        
         cv2.namedWindow("ball_detector", cv2.WINDOW_NORMAL)
         cv2.resizeWindow("ball_detector", CV2_WINDOW_X, CV2_WINDOW_Y)  
 
@@ -84,6 +85,7 @@ class BallDetector(Node):
 
         # ===== Subscriber =====
         self.create_subscription(String,'detect_ball_color',self.color_cb,10)
+
 
         # ===== タイマー（制御ループ）=====
         self.create_timer(1.0 / FPS, self.timer_cb)
@@ -163,7 +165,7 @@ class BallDetector(Node):
         depth = np.asanyarray(df.get_data())
 
         # ===============================
-        # 画面中心点にある物体までの距離 を ぱぶりっしゅ
+        # 画面中心点にある物体までの距離をパブリッシュ
         # ===============================
         center_depth_raw = depth[(IMG_W // 2), (IMG_H // 2)]
         if center_depth_raw > 0:
@@ -219,35 +221,42 @@ class BallDetector(Node):
                 draw,
                 (x1, y1),
                 (x2, y2),
-                (255, 255, 0),
+                (255, 255, 0),  # 水色
                 2
             )
 
+        # ===============================
+        # ターゲット選択・ロスト管理
+        # ===============================
         if dets:
-            if self.target_locked is None:
-                self.target_locked = min(dets, key=lambda x: x["depth"])
-            else:
-                def tracking_cost(det):
-                    dx_diff = det["dx"] - self.target_locked["dx"]
-                    dy_diff = det["dy"] - self.target_locked["dy"]
-                    return dx_diff**2 + dy_diff**2
-
-                self.target_locked = min(dets, key=tracking_cost)
-
+            # 常に一番近いボールを選択
+            self.target_locked = min(dets, key=lambda x: x["depth"])
             self.last = self.target_locked
             self.miss = 0
+            box_color = (0, 255, 0)  # 緑（検出中）
 
+        else:
+            self.miss += 1
+            if self.miss > MAX_MISS:
+                self.last = None
+                self.target_locked = None
+                self.publish_ball_info()
+            box_color = (0, 0, 255)  # 赤（ロスト猶予中）
+
+        # ===============================
+        # ターゲットの描画・パブリッシュ
+        # ===============================
+        if self.last is not None:
             x1, y1, x2, y2 = self.last["bbox"]
             dx = self.last["dx"]
             dy = self.last["dy"]
             depth_cm = self.last["depth"]
             confidence = self.last["conf"]
-
             cx = (x1 + x2) // 2
             cy = (y1 + y2) // 2
 
-            # ===== 緑色バウンディングボックス（通常検出中）=====
-            cv2.rectangle(draw, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            # バウンディングボックス（検出中:緑 / 猶予中:赤）
+            cv2.rectangle(draw, (x1, y1), (x2, y2), box_color, 2)
 
             # ボール中心点（赤丸）
             cv2.circle(draw, (cx, cy), 6, (0, 0, 255), -1)
@@ -255,76 +264,28 @@ class BallDetector(Node):
             # 中点から画面中心への線
             cv2.line(draw, (CENTER_X, CENTER_Y), (cx, cy), (255, 0, 0), 2)
 
-            # ===== しきい値判定 =====
-            dx_ok = abs(dx) <= DX_TH
-            dy_ok = abs(dy) <= DY_TH
-            depth_ok = DEPTH_MIN <= depth_cm <= DEPTH_MAX
+            # しきい値判定
+            dx_ok    = abs(dx)    <= DX_TH
+            dy_ok    = abs(dy)    <= DY_TH
+            depth_ok = DEPTH_MIN  <= depth_cm <= DEPTH_MAX
 
-            dx_color = (0, 255, 0) if dx_ok else (0, 0, 255)
-            dy_color = (0, 255, 0) if dy_ok else (0, 0, 255)
+            dx_color    = (0, 255, 0) if dx_ok    else (0, 0, 255)
+            dy_color    = (0, 255, 0) if dy_ok    else (0, 0, 255)
             depth_color = (0, 255, 0) if depth_ok else (0, 0, 255)
 
             y_text = y1 - 10
-
             cv2.putText(draw, f"dx:{dx}",
-                (x1, y_text), cv2.FONT_HERSHEY_SIMPLEX, 0.5, dx_color, 2)
-
+                        (x1,       y_text), cv2.FONT_HERSHEY_SIMPLEX, 0.5, dx_color,    2)
             cv2.putText(draw, f"dy:{dy}",
-                (x1 + 80, y_text), cv2.FONT_HERSHEY_SIMPLEX, 0.5, dy_color, 2)
-
+                        (x1 + 80,  y_text), cv2.FONT_HERSHEY_SIMPLEX, 0.5, dy_color,    2)
             cv2.putText(draw, f"depth:{depth_cm:.1f}cm",
-                (x1 + 160, y_text), cv2.FONT_HERSHEY_SIMPLEX, 0.5, depth_color, 2)
-
+                        (x1 + 160, y_text), cv2.FONT_HERSHEY_SIMPLEX, 0.5, depth_color, 2)
             cv2.putText(draw, f"conf:{confidence:.2f}",
-                (x1 + 20, y2 + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
+                        (x1 + 20,  y2 + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
 
-            self.publish_ball_info(dx, dy, depth_cm)
-
-        else:
-            # ターゲットがロック済みのときだけ猶予カウント
-            if self.target_locked is not None:
-                self.miss += 1
-                if self.miss > MAX_MISS:
-                    self.get_logger().info("ターゲットロスト（猶予フレームをこえちゃったよ）")
-                    self.last = None
-                    self.target_locked = None
-                    self.miss = 0
-                    self.publish_ball_info()
-                else:
-                    # 猶予中は前回の last を使って黄色枠を描画
-                    if self.last is not None:
-                        x1, y1, x2, y2 = self.last["bbox"]
-                        cx = (x1 + x2) // 2
-                        cy = (y1 + y2) // 2
-
-                        # ===== 黄色バウンディングボックス（猶予中）=====
-                        cv2.rectangle(draw, (x1, y1), (x2, y2), (0, 255, 255), 2)
-
-                        # ボール中心点（赤丸）
-                        cv2.circle(draw, (cx, cy), 6, (0, 0, 255), -1)
-
-                        # 中点から画面中心への線
-                        cv2.line(draw, (CENTER_X, CENTER_Y), (cx, cy), (255, 0, 0), 2)
-
-                        # 猶予フレーム残り表示
-                        cv2.putText(
-                            draw,
-                            f"LOST: {self.miss}/{MAX_MISS}",
-                            (x1, y1 - 10),
-                            cv2.FONT_HERSHEY_SIMPLEX,
-                            0.5,
-                            (0, 255, 255),
-                            2
-                        )
-
-                        self.publish_ball_info(
-                            self.last["dx"],
-                            self.last["dy"],
-                            self.last["depth"]
-                        )
-            else:
-                # そもそもターゲット未ロックなら即座に未検出
-                self.publish_ball_info()
+            # 実際に検出できているフレームのみパブリッシュ
+            if dets:
+                self.publish_ball_info(dx, dy, depth_cm)
 
         # ウィンドウ表示
         cv2.imshow("ball_detector", draw)
