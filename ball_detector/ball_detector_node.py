@@ -16,6 +16,12 @@ from imrc_messages.msg import LedControl
 # ===============================
 IMG_W, IMG_H = 640, 480
 
+# LED制御用の定数
+BRIGHTNESS = 1.0
+INDEX = 5
+BLINK = 1000.0
+MODE = "apply"
+
 # 制御ループ周期　これは変えないほうがいいかも　
 FPS = 15
 
@@ -105,33 +111,33 @@ class BallDetector(Node):
             self.current_model = self.model_red
             
             # LED を赤く点灯させる
-            self.msg_led.led_brightness = 1.0
-            self.msg_led.led_index = 5
+            self.msg_led.led_brightness = BRIGHTNESS
+            self.msg_led.led_index = INDEX
             self.msg_led.led_color = "RED"
-            self.msg_led.led_mode = "apply"
-            self.msg_led.blink_duration = 1000.0
+            self.msg_led.led_mode = MODE
+            self.msg_led.blink_duration = BLINK
             self.led_pub.publish(self.msg_led)
             
         elif self.target_color == "青":
             self.current_model = self.model_blue
 
             # LED を青く点灯させる
-            self.msg_led.led_brightness = 1.0
-            self.msg_led.led_index = 5
+            self.msg_led.led_brightness = BRIGHTNESS
+            self.msg_led.led_index = INDEX
             self.msg_led.led_color = "BLUE"
-            self.msg_led.led_mode = "apply"
-            self.msg_led.blink_duration = 1000.0
+            self.msg_led.led_mode = MODE
+            self.msg_led.blink_duration = BLINK
             self.led_pub.publish(self.msg_led)
 
         elif self.target_color == "黄":
             self.current_model = self.model_yellow
 
             # LED を黄色に点灯させる
-            self.msg_led.led_brightness = 1.0
-            self.msg_led.led_index = 5
+            self.msg_led.led_brightness = BRIGHTNESS
+            self.msg_led.led_index = INDEX
             self.msg_led.led_color = "YELLOW"
-            self.msg_led.led_mode = "apply"
-            self.msg_led.blink_duration = 1000.0
+            self.msg_led.led_mode = MODE
+            self.msg_led.blink_duration = BLINK
             self.led_pub.publish(self.msg_led)
 
         else:
