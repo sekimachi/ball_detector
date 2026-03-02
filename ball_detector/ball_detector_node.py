@@ -183,9 +183,12 @@ class BallDetector(Node):
             msg.data = "測定不能"
         self.depth_pub.publish(msg)
 
+        # ターゲットがロックされている間だけ、しきい値を下げる
+        current_conf = CONF_TH if self.target_locked is None else 0.20
+        
         # ---- YOLO 検出 ----
         dets = []
-        for r in self.current_model(color, conf=CONF_TH, verbose=False):
+        for r in self.current_model(color, conf=current_conf, verbose=False):
             if not r.boxes:
                 continue
             for b in r.boxes:
