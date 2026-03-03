@@ -37,7 +37,7 @@ DY_TH = 20
 
 #目標とするボールまでの距離の範囲（単位はcm）
 DEPTH_MIN = 41.0
-DEPTH_MAX = 51.0
+DEPTH_MAX = 48.5
 
 
 # YOLO の信頼度しきい値
