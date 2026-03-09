@@ -9,7 +9,8 @@ import numpy as np
 import cv2
 from imrc_messages.msg import BallInfo
 from imrc_messages.msg import LedControl
-
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
 
 # ===============================
 # 調整用パラメータ（ロボット・環境依存なので適宜調整をするお）
@@ -65,6 +66,7 @@ class BallDetector(Node):
         self.target_color = None
 
         
+        self.bridge = CvBridge()
         cv2.namedWindow("ball_detector", cv2.WINDOW_NORMAL)
         cv2.resizeWindow("ball_detector", CV2_WINDOW_X, CV2_WINDOW_Y)  
 
@@ -88,6 +90,7 @@ class BallDetector(Node):
         self.ball_pub = self.create_publisher(BallInfo,'ball_info',10)
         self.led_pub = self.create_publisher(LedControl,'led_cmd',10)
         self.depth_pub = self.create_publisher(String,'depth_status',10)
+        self.image_pub = self.create_publisher(Image, "ball_detector/image", 10)
 
         # ===== Subscriber =====
         self.create_subscription(String,'detect_ball_color',self.color_cb,10)
@@ -299,6 +302,9 @@ class BallDetector(Node):
         # ウィンドウ表示
         cv2.imshow("ball_detector", draw)
         cv2.waitKey(1)
+
+        img_msg = self.bridge.cv2_to_imgmsg(draw, encoding="bgr8")
+        self.image_pub.publish(img_msg)
 
 
     def publish_ball_info(self, dx=None, dy=None, depth=None):
