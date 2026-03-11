@@ -43,6 +43,7 @@ DEPTH_MAX = 48.5
 
 # YOLO の信頼度しきい値
 CONF_TH = 0.65
+ARGET_CONF_TH = 0.35
 
 # 画面上で「目標のボールの中心」とみなす座標を指定   
 CENTER_X, CENTER_Y = (IMG_W // 2) + center_paramX, (IMG_H // 2) + center_paramY
@@ -187,7 +188,7 @@ class BallDetector(Node):
         self.depth_pub.publish(msg)
 
         # ターゲットがロックされている間だけ、しきい値を下げる
-        current_conf = CONF_TH if self.target_locked is None else 0.65
+        current_conf = CONF_TH if self.target_locked is None else TARGET_CONF_TH
         
         # ---- YOLO 検出 ----
         dets = []
