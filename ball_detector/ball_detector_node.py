@@ -43,7 +43,7 @@ DEPTH_MAX = 48.5
 
 # YOLO の信頼度しきい値
 CONF_TH = 0.65
-ARGET_CONF_TH = 0.35
+TARGET_CONF_TH = 0.35
 
 # 画面上で「目標のボールの中心」とみなす座標を指定   
 CENTER_X, CENTER_Y = (IMG_W // 2) + center_paramX, (IMG_H // 2) + center_paramY
@@ -92,6 +92,7 @@ class BallDetector(Node):
         self.led_pub = self.create_publisher(LedControl,'led_cmd',10)
         self.depth_pub = self.create_publisher(String,'depth_status',10)
         self.image_pub = self.create_publisher(Image, "ball_detector/image", 10)
+        self.raw_image_pub = self.create_publisher(Image, "ball_detector/raw_image", 10)
 
         # ===== Subscriber =====
         self.create_subscription(String,'detect_ball_color',self.color_cb,10)
@@ -173,6 +174,10 @@ class BallDetector(Node):
 
         color = np.asanyarray(cf.get_data())
         depth = np.asanyarray(df.get_data())
+
+        # ===== GUIなし生カメラ画像 publish =====
+        raw_msg = self.bridge.cv2_to_imgmsg(color, encoding="bgr8")
+        self.raw_image_pub.publish(raw_msg)
 
         # ===============================
         # 画面中心点にある物体までの距離をパブリッシュ
