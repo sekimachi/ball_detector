@@ -50,7 +50,7 @@ CENTER_X, CENTER_Y = (IMG_W // 2) + center_paramX, (IMG_H // 2) + center_paramY
 
 
 # 検出ロスト許容フレーム数
-MAX_MISS = 10
+MAX_MISS = 6
 
 CV2_WINDOW_X = 640
 CV2_WINDOW_Y = 640
@@ -227,6 +227,22 @@ class BallDetector(Node):
             2
         )
 
+        # ===== 許容範囲ボックス（緑）=====
+        cv2.rectangle(
+            draw,
+            (CENTER_X - DX_TH, CENTER_Y - DY_TH),
+            (CENTER_X + DX_TH,CENTER_Y + DY_TH),
+            (0, 255, 0),  # 緑
+            2
+        )
+        # ==== 落としてない判定の許容範囲 =====
+        cv2.rectangle(
+            draw,
+            (CENTER_X - (DX_TH + 5), CENTER_Y - (DY_TH + 8)),
+            (CENTER_X + (DX_TH + 5),CENTER_Y + (DY_TH + 8)),
+            (255, 255, 0),  
+            2
+        )
         # ===== 全検出物体（水色）=====
         for det in dets:
             x1, y1, x2, y2 = det["bbox"]
