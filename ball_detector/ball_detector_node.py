@@ -243,8 +243,8 @@ class BallDetector(Node):
         # ==== 落としてない判定の許容範囲 =====
         cv2.rectangle(
             draw,
-            (CENTER_X - (DX_TH + 5), CENTER_Y - (DY_TH + 8)),
-            (CENTER_X + (DX_TH + 5),CENTER_Y + (DY_TH + 8)),
+            (CENTER_X - (DX_TH + 10), CENTER_Y - (DY_TH + 8)),
+            (CENTER_X + (DX_TH + 10),CENTER_Y + (DY_TH + 8)),
             (255, 255, 0),  
             2
         )
