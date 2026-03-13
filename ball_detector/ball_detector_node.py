@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from rclpy.node import Node
 import rclpy
 from std_msgs.msg import String
@@ -40,14 +41,12 @@ DY_TH = 20
 DEPTH_MIN = 41.0
 DEPTH_MAX = 48.5
 
-
 # YOLO の信頼度しきい値
 CONF_TH = 0.65
-TARGET_CONF_TH = 0.35
+TARGET_CONF_TH = 0.25
 
-# 画面上で「目標のボールの中心」とみなす座標を指定   
+# 画面上で「目標のボールの中心」とみなす座標を指定
 CENTER_X, CENTER_Y = (IMG_W // 2) + center_paramX, (IMG_H // 2) + center_paramY
-
 
 # 検出ロスト許容フレーム数
 MAX_MISS = 6
@@ -66,10 +65,9 @@ class BallDetector(Node):
         self.current_model = None
         self.target_color = None
 
-        
         self.bridge = CvBridge()
         cv2.namedWindow("ball_detector", cv2.WINDOW_NORMAL)
-        cv2.resizeWindow("ball_detector", CV2_WINDOW_X, CV2_WINDOW_Y)  
+        cv2.resizeWindow("ball_detector", CV2_WINDOW_X, CV2_WINDOW_Y)
 
         # ===== RealSense 初期化 =====
         self.pipeline = rs.pipeline()
@@ -86,7 +84,7 @@ class BallDetector(Node):
         self.model_blue   = YOLO(os.path.join(base, 'best_blue.pt'))
         self.model_yellow = YOLO(os.path.join(base, 'best_yellow.pt'))
 
-        # ===== Publisher ====
+        # ===== Publisher =====
         self.status_pub = self.create_publisher(Bool,'detect_ball_status',10)
         self.ball_pub = self.create_publisher(BallInfo,'ball_info',10)
         self.led_pub = self.create_publisher(LedControl,'led_cmd',10)
@@ -97,10 +95,8 @@ class BallDetector(Node):
         # ===== Subscriber =====
         self.create_subscription(String,'detect_ball_color',self.color_cb,10)
 
-
         # ===== タイマー（制御ループ）=====
         self.create_timer(1.0 / FPS, self.timer_cb)
-        # =================================
 
         self.msg_led = LedControl()
 
@@ -108,25 +104,20 @@ class BallDetector(Node):
     # 色を受け取るコールバック
     # ===============================
     def color_cb(self, msg):
-        
         self.target_color = msg.data
 
         # ====受け取った色に応じてモデルを切り替える====
         if self.target_color == "赤":
             self.current_model = self.model_red
-            
-            # LED を赤く点灯させる
             self.msg_led.led_brightness = BRIGHTNESS
             self.msg_led.led_index = INDEX
             self.msg_led.led_color = "RED"
             self.msg_led.led_mode = MODE
             self.msg_led.blink_duration = BLINK
             self.led_pub.publish(self.msg_led)
-            
+
         elif self.target_color == "青":
             self.current_model = self.model_blue
-
-            # LED を青く点灯させる
             self.msg_led.led_brightness = BRIGHTNESS
             self.msg_led.led_index = INDEX
             self.msg_led.led_color = "BLUE"
@@ -136,8 +127,6 @@ class BallDetector(Node):
 
         elif self.target_color == "黄":
             self.current_model = self.model_yellow
-
-            # LED を黄色に点灯させる
             self.msg_led.led_brightness = BRIGHTNESS
             self.msg_led.led_index = INDEX
             self.msg_led.led_color = "YELLOW"
@@ -153,8 +142,23 @@ class BallDetector(Node):
             self.get_logger().warn(f"不正な色を受信: {self.target_color}")
 
         self.get_logger().info(f"現在の検出対象: {self.target_color}")
-        # ==============================================    
 
+    # ===============================
+    # IoU計算
+    # ===============================
+    def _calc_iou(self, boxA, boxB):
+        ax1, ay1, ax2, ay2 = boxA
+        bx1, by1, bx2, by2 = boxB
+        ix1 = max(ax1, bx1)
+        iy1 = max(ay1, by1)
+        ix2 = min(ax2, bx2)
+        iy2 = min(ay2, by2)
+        inter = max(0, ix2 - ix1) * max(0, iy2 - iy1)
+        if inter == 0:
+            return 0.0
+        areaA = (ax2 - ax1) * (ay2 - ay1)
+        areaB = (bx2 - bx1) * (by2 - by1)
+        return inter / (areaA + areaB - inter)
 
     # ===============================
     # メイン処理
@@ -194,7 +198,7 @@ class BallDetector(Node):
 
         # ターゲットがロックされている間だけ、しきい値を下げる
         current_conf = CONF_TH if self.target_locked is None else TARGET_CONF_TH
-        
+
         # ---- YOLO 検出 ----
         dets = []
         for r in self.current_model(color, conf=current_conf, verbose=False):
@@ -202,7 +206,7 @@ class BallDetector(Node):
                 continue
             for b in r.boxes:
                 x1, y1, x2, y2 = map(int, b.xyxy[0])
-                conf = float(b.conf[0])   
+                conf = float(b.conf[0])
                 cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
 
                 d = depth[cy, cx]
@@ -236,16 +240,16 @@ class BallDetector(Node):
         cv2.rectangle(
             draw,
             (CENTER_X - DX_TH, CENTER_Y - DY_TH),
-            (CENTER_X + DX_TH,CENTER_Y + DY_TH),
-            (0, 255, 0),  # 緑
+            (CENTER_X + DX_TH, CENTER_Y + DY_TH),
+            (0, 255, 0),
             2
         )
         # ==== 落としてない判定の許容範囲 =====
         cv2.rectangle(
             draw,
             (CENTER_X - (DX_TH + 10), CENTER_Y - (DY_TH + 8)),
-            (CENTER_X + (DX_TH + 10),CENTER_Y + (DY_TH + 8)),
-            (255, 255, 0),  
+            (CENTER_X + (DX_TH + 10), CENTER_Y + (DY_TH + 8)),
+            (255, 255, 0),
             2
         )
         # ===== 全検出物体（水色）=====
@@ -255,7 +259,7 @@ class BallDetector(Node):
                 draw,
                 (x1, y1),
                 (x2, y2),
-                (255, 255, 0),  # 水色
+                (255, 255, 0),
                 2
             )
 
@@ -263,8 +267,17 @@ class BallDetector(Node):
         # ターゲット選択・ロスト管理
         # ===============================
         if dets:
-            # 常に一番近いボールを選択
-            self.target_locked = min(dets, key=lambda x: x["depth"])
+            if self.target_locked is None:
+                # 初回：一番近いボールをロック
+                self.target_locked = min(dets, key=lambda x: x["depth"])
+            else:
+                # ロック済み：前フレームとIoUが最も高いものを継続追跡
+                best = max(dets, key=lambda d: self._calc_iou(self.target_locked["bbox"], d["bbox"]))
+                if self._calc_iou(self.target_locked["bbox"], best["bbox"]) < 0.1:
+                    # IoUが低すぎる＝完全に別の場所 → 近い方で再ロック
+                    best = min(dets, key=lambda x: x["depth"])
+                self.target_locked = best
+
             self.last = self.target_locked
             self.miss = 0
             box_color = (0, 255, 0)  # 緑（検出中）
@@ -327,7 +340,6 @@ class BallDetector(Node):
 
         img_msg = self.bridge.cv2_to_imgmsg(draw, encoding="bgr8")
         self.image_pub.publish(img_msg)
-
 
     def publish_ball_info(self, dx=None, dy=None, depth=None):
         msg = BallInfo()
