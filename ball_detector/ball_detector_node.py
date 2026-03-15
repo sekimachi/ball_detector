@@ -91,6 +91,7 @@ class BallDetector(Node):
         self.depth_pub = self.create_publisher(String,'depth_status',10)
         self.image_pub = self.create_publisher(Image, "ball_detector/image", 10)
         self.raw_image_pub = self.create_publisher(Image, "ball_detector/raw_image", 10)
+        self.depth_image_pub = self.create_publisher(Image, "ball_detector/depth_image", 10)
 
         # ===== Subscriber =====
         self.create_subscription(String,'detect_ball_color',self.color_cb,10)
@@ -183,6 +184,15 @@ class BallDetector(Node):
         raw_msg = self.bridge.cv2_to_imgmsg(color, encoding="bgr8")
         self.raw_image_pub.publish(raw_msg)
 
+
+        # 深度画像をカラーマップ付きで publish
+        depth_colormap = cv2.applyColorMap(
+            cv2.convertScaleAbs(depth, alpha=0.03),
+            cv2.COLORMAP_JET
+        )
+        depth_msg = self.bridge.cv2_to_imgmsg(depth_colormap, encoding="bgr8")
+        self.depth_image_pub.publish(depth_msg)
+        
         # ===============================
         # 画面中心点にある物体までの距離をパブリッシュ
         # ===============================
